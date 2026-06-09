@@ -1,6 +1,6 @@
 # AutoBoost Agent
 
-An AI agent that monitors franchise social media posts in real time and automatically boosts high-performing content on Meta — built for [Ignite Visibility](https://ignitevisibility.com) and the [Rallio](https://rallio.com) platform.
+An AI agent that monitors franchise social media posts in real time and automatically boosts high-performing content.
 
 ## The Problem
 

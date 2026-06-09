@@ -1,0 +1,148 @@
+{
+  "baselines": {
+    "loc-001": {
+      "location_id": "loc-001",
+      "avg_comments": 12,
+      "avg_shares": 8,
+      "avg_saves": 5,
+      "avg_likes": 45,
+      "avg_reach_0_2h": 800,
+      "avg_reach_2_6h": 1500,
+      "avg_reach_6_12h": 1800,
+      "avg_reach_12_24h": 2000
+    },
+    "loc-002": {
+      "location_id": "loc-002",
+      "avg_comments": 20,
+      "avg_shares": 12,
+      "avg_saves": 8,
+      "avg_likes": 80,
+      "avg_reach_0_2h": 1200,
+      "avg_reach_2_6h": 2200,
+      "avg_reach_6_12h": 2800,
+      "avg_reach_12_24h": 3200
+    }
+  },
+  "posts": [
+    {
+      "_description": "VIRAL — passes score and filter, demo-brand APPROVAL mode",
+      "post_id": "post-viral-001",
+      "location_id": "loc-001",
+      "brand_id": "demo-brand",
+      "platform": "facebook",
+      "content": "Our team just won the Franchise of the Month award! Couldn't have done it without our amazing customers. Come in this weekend for a FREE treat on us 🎉",
+      "published_at": "2026-06-08T09:00:00Z",
+      "post_age_hours": 1.5,
+      "comments_count": 48,
+      "shares_count": 35,
+      "saves_count": 22,
+      "likes_count": 180,
+      "reach": 4200,
+      "angry_reactions": 2,
+      "sad_reactions": 1,
+      "total_reactions": 195,
+      "recent_comments": [
+        "Congratulations! You all deserve it!",
+        "Amazing team, always so friendly",
+        "Will definitely be there this weekend!",
+        "Best franchise in the area no doubt",
+        "So proud of you guys, love this place"
+      ]
+    },
+    {
+      "_description": "BELOW THRESHOLD — normal post, no action",
+      "post_id": "post-normal-002",
+      "location_id": "loc-001",
+      "brand_id": "demo-brand",
+      "platform": "facebook",
+      "content": "Happy Monday! Stop by and start your week right with our morning specials.",
+      "published_at": "2026-06-08T08:00:00Z",
+      "post_age_hours": 2.5,
+      "comments_count": 8,
+      "shares_count": 5,
+      "saves_count": 3,
+      "likes_count": 30,
+      "reach": 1200,
+      "angry_reactions": 0,
+      "sad_reactions": 0,
+      "total_reactions": 30,
+      "recent_comments": [
+        "Sounds good!",
+        "Love the specials"
+      ]
+    },
+    {
+      "_description": "VIRAL but SUPPRESSED — high score, fails negativity filter (stage 1 reaction ratio)",
+      "post_id": "post-negative-003",
+      "location_id": "loc-001",
+      "brand_id": "demo-brand",
+      "platform": "facebook",
+      "content": "Exciting news about our upcoming menu changes!",
+      "published_at": "2026-06-08T07:00:00Z",
+      "post_age_hours": 3.0,
+      "comments_count": 55,
+      "shares_count": 28,
+      "saves_count": 10,
+      "likes_count": 120,
+      "reach": 3800,
+      "angry_reactions": 52,
+      "sad_reactions": 18,
+      "total_reactions": 210,
+      "recent_comments": [
+        "Why are you removing my favorite item?",
+        "This is a terrible decision",
+        "Lost a loyal customer today",
+        "Not happy about this at all",
+        "Bring back the old menu!"
+      ]
+    },
+    {
+      "_description": "VIRAL — auto-brand AUTONOMOUS mode, fires immediately",
+      "post_id": "post-auto-004",
+      "location_id": "loc-002",
+      "brand_id": "auto-brand",
+      "platform": "instagram",
+      "content": "New location opening next month — follow us for the grand opening details and an exclusive discount code!",
+      "published_at": "2026-06-08T10:00:00Z",
+      "post_age_hours": 0.75,
+      "comments_count": 95,
+      "shares_count": 72,
+      "saves_count": 60,
+      "likes_count": 340,
+      "reach": 5800,
+      "angry_reactions": 1,
+      "sad_reactions": 0,
+      "total_reactions": 345,
+      "recent_comments": [
+        "Finally! I've been waiting for this",
+        "Discount code incoming, saving this!",
+        "Sharing with everyone I know",
+        "So excited for the new location"
+      ]
+    },
+    {
+      "_description": "VIRAL — notify-brand NOTIFY_ONLY mode, Slack alert with no spend",
+      "post_id": "post-notify-005",
+      "location_id": "loc-002",
+      "brand_id": "notify-brand",
+      "platform": "facebook",
+      "content": "Behind the scenes look at how we prep for the morning rush. Our team is here at 5am every day!",
+      "published_at": "2026-06-08T06:00:00Z",
+      "post_age_hours": 5.0,
+      "comments_count": 38,
+      "shares_count": 29,
+      "saves_count": 18,
+      "likes_count": 220,
+      "reach": 5100,
+      "angry_reactions": 0,
+      "sad_reactions": 1,
+      "total_reactions": 225,
+      "recent_comments": [
+        "Incredible dedication!",
+        "This is why this place is the best",
+        "Much respect for the early risers",
+        "Love the transparency"
+      ]
+    }
+  ]
+}
