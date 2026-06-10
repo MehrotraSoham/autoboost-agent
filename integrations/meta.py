@@ -34,7 +34,11 @@ def submit_boost(post: Post, budget: float, audience_id: str) -> BoostResult:
     Meta Ads MCP (announced April 2026) reduces review time to near-instant
     when pre-approved ad templates are used.
     """
-    if settings.meta_access_token and settings.meta_ad_account_id:
+    real_token = (
+        settings.meta_access_token
+        and settings.meta_access_token != "your_meta_access_token"
+    )
+    if real_token:
         return _submit_real_boost(post, budget, audience_id)
 
     return _submit_mock_boost(post, budget, audience_id)

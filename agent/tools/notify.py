@@ -1,15 +1,13 @@
-import asyncio
 from langchain_core.tools import tool
 
 from integrations import slack
-from config.registry import get_post
+from config.registry import get_post, get_baseline
 from config.brand_config import get_brand_config
 from agent import engine
-from config.registry import get_baseline
 
 
 @tool
-def send_slack_notification(post_id: str, mode: str = "APPROVAL") -> dict:
+async def send_slack_notification(post_id: str, mode: str = "APPROVAL") -> dict:
     """
     Send a Slack notification to the account manager.
 
@@ -31,15 +29,12 @@ def send_slack_notification(post_id: str, mode: str = "APPROVAL") -> dict:
         )
         return {"notified": True, "post_id": post_id}
 
-    # APPROVAL mode — wait for account manager response
-    approved = asyncio.run(
-        slack.send_approval_request(
-            post=post,
-            score=score_result,
-            budget=config.default_boost_budget,
-            channel_id=config.slack_channel_id,
-            timeout_mins=config.approval_timeout_mins,
-        )
+    approved = await slack.send_approval_request(
+        post=post,
+        score=score_result,
+        budget=config.default_boost_budget,
+        channel_id=config.slack_channel_id,
+        timeout_mins=config.approval_timeout_mins,
     )
     return {
         "approved": approved,

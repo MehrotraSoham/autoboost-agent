@@ -26,7 +26,7 @@ async def send_approval_request(
     Send an approval notification to Slack and wait for a response.
     Returns True if approved, False if suppressed or timed out.
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     future: asyncio.Future = loop.create_future()
     _pending_approvals[post.post_id] = future
 

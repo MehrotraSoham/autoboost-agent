@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 
 from config.models import Post, FilterResult
-from config.brand_config import settings
+from config.llm import get_llm
 
 NEGATIVE_REACTION_THRESHOLD = 0.20
 NEGATIVE_COMMENT_THRESHOLD = 0.30
@@ -67,16 +66,8 @@ async def run(post: Post) -> FilterResult:
 
 
 async def _analyze_sentiment(comments: list[str]) -> float:
-    """Use Claude Haiku to classify comments and return the negative ratio."""
-    if not settings.anthropic_api_key:
-        # Mock mode — return 0 so filter passes without real credentials
-        return 0.0
-
-    llm = ChatAnthropic(
-        model="claude-haiku-4-5-20251001",
-        api_key=settings.anthropic_api_key,
-        max_tokens=256,
-    )
+    """Use the configured LLM to classify comments and return the negative ratio."""
+    llm = get_llm(max_tokens=256)
 
     prompt = ChatPromptTemplate.from_messages([
         (

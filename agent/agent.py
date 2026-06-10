@@ -5,14 +5,26 @@ Uses LangGraph's prebuilt ReAct agent with Claude as the backbone.
 The agent receives a post event, then decides which tools to call and
 in what order — guided by a system prompt that encodes the AutoBoost
 decision process.
+
+LangSmith tracing is enabled automatically when LANGCHAIN_TRACING_V2=true
+and LANGCHAIN_API_KEY are set in the environment. View traces at
+smith.langchain.com to see every tool call, LLM reasoning step, and token usage.
 """
-from langchain_anthropic import ChatAnthropic
+import os
 from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
 
 from agent.tools import ALL_TOOLS
-from config.brand_config import get_brand_config, BoostMode, settings
+from config.brand_config import get_brand_config, settings
+from config.llm import get_llm
 from config.registry import get_post
+
+# LangSmith reads these directly from the environment.
+# We sync them from pydantic-settings so .env is the single source of truth.
+os.environ.setdefault("LANGCHAIN_TRACING_V2", str(settings.langchain_tracing_v2).lower())
+if settings.langchain_api_key:
+    os.environ.setdefault("LANGCHAIN_API_KEY", settings.langchain_api_key)
+os.environ.setdefault("LANGCHAIN_PROJECT", settings.langchain_project)
 
 SYSTEM_PROMPT = """You are AutoBoost, an AI agent for Ignite Visibility that decides whether \
 to boost franchise social media posts with paid advertising.
@@ -40,12 +52,8 @@ Always complete the full process. Be concise and factual in your final report.""
 
 
 def build_agent():
-    """Create the LangChain ReAct agent with all AutoBoost tools."""
-    llm = ChatAnthropic(
-        model="claude-haiku-4-5-20251001",
-        api_key=settings.anthropic_api_key or "mock-key",
-        max_tokens=1024,
-    )
+    """Create the LangChain ReAct agent with the configured LLM provider."""
+    llm = get_llm(max_tokens=1024)
     return create_react_agent(llm, tools=ALL_TOOLS, prompt=SYSTEM_PROMPT)
 
 
@@ -57,65 +65,20 @@ async def process_post(post_id: str) -> str:
     post = get_post(post_id)
     config = get_brand_config(post.brand_id)
 
-    if not settings.anthropic_api_key:
-        return await _run_without_llm(post_id, config.boost_mode)
-
     agent = build_agent()
     message = (
         f"Process post_id='{post_id}' for brand_id='{post.brand_id}'. "
         f"The boost_mode for this brand is {config.boost_mode.value}."
     )
 
+    print(f"\n[Agent] Processing {post_id} (mode={config.boost_mode.value})...")
     result = await agent.ainvoke({"messages": [HumanMessage(content=message)]})
-    final_message = result["messages"][-1].content
-    print(f"\n[Agent] Final response for {post_id}:\n{final_message}\n")
-    return final_message
 
-
-async def _run_without_llm(post_id: str, boost_mode: BoostMode) -> str:
-    """
-    Fallback pipeline when no Anthropic API key is set.
-    Runs the same logic deterministically so the demo works without credentials.
-    """
-    from agent import engine, filter as neg_filter
-    from integrations import slack, meta
-    from config.registry import get_post, get_baseline
-    from config.brand_config import get_brand_config
-
-    post = get_post(post_id)
-    baseline = get_baseline(post.location_id)
-    config = get_brand_config(post.brand_id)
-
-    # Step 1: Score
-    score_result = engine.score(post, baseline, threshold=config.score_threshold)
-    print(f"[Pipeline] {post_id} → score={score_result.composite_score} triggered={score_result.triggered}")
-
-    if not score_result.triggered:
-        return f"Post {post_id} scored {score_result.composite_score} — below threshold {score_result.threshold}. No action."
-
-    # Step 2: Negativity filter
-    filter_result = await neg_filter.run(post)
-    print(f"[Pipeline] {post_id} → filter passed={filter_result.passed}")
-
-    if not filter_result.passed:
-        return f"Post {post_id} suppressed: {filter_result.suppressed_reason}"
-
-    # Step 3: Route by boost mode
-    if boost_mode == BoostMode.NOTIFY_ONLY:
-        slack.send_notification(post, score_result, config.slack_channel_id)
-        return f"Post {post_id} — NOTIFY_ONLY: Slack alert sent. No spend triggered."
-
-    if boost_mode == BoostMode.APPROVAL:
-        approved = await slack.send_approval_request(
-            post, score_result, config.default_boost_budget,
-            config.slack_channel_id, config.approval_timeout_mins,
-        )
-        if not approved:
-            return f"Post {post_id} — suppressed by account manager (or timed out)."
-
-    audience_id = meta.build_lookalike_audience(post)
-    boost = meta.submit_boost(post, config.default_boost_budget, audience_id)
-    return (
-        f"Post {post_id} — boost submitted. "
-        f"campaign_id={boost.campaign_id} budget=${boost.budget}"
+    # Find the last non-empty AI message — tool errors leave ToolMessages at the end
+    from langchain_core.messages import AIMessage
+    final_message = next(
+        (m.content for m in reversed(result["messages"]) if isinstance(m, AIMessage) and m.content),
+        "Agent completed with no final message."
     )
+    print(f"[Agent] Done — {post_id}: {final_message}\n")
+    return final_message

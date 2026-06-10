@@ -23,11 +23,19 @@ class BrandConfig(BaseModel):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # LLM provider — "gemini" or "anthropic"
+    llm_provider: str = "gemini"
+    google_api_key: str = ""
     anthropic_api_key: str = ""
     slack_bot_token: str = ""
     slack_channel_id: str = ""
     meta_access_token: str = ""
     meta_ad_account_id: str = ""
+
+    # LangSmith tracing — set these to see full agent traces at smith.langchain.com
+    langchain_tracing_v2: bool = False
+    langchain_api_key: str = ""
+    langchain_project: str = "autoboost-agent"
 
     boost_mode: BoostMode = BoostMode.APPROVAL
     score_threshold: float = 1.5
