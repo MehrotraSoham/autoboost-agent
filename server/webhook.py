@@ -22,11 +22,13 @@ from config.models import Post, LocationBaseline
 async def lifespan(app: FastAPI):
     # Load sample data so posts are available in the registry on startup
     load_sample_data()
-    client = RallioClient(mock=True)
-    # Run the simulator so you see the pipeline fire immediately on startup
-    asyncio.create_task(client.run_simulator(
-        handler=lambda event: process_post(event.post_id)
-    ))
+    # NOTE: simulator disabled temporarily — firing all 5 sample posts at once
+    # blows through Gemini's free-tier 5 req/min quota. Trigger posts manually
+    # via /webhook/engagement instead.
+    # client = RallioClient(mock=True)
+    # asyncio.create_task(client.run_simulator(
+    #     handler=lambda event: process_post(event.post_id)
+    # ))
     yield
 
 
