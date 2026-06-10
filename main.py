@@ -1,17 +1,20 @@
 """
 AutoBoost Agent — entry point.
 
-Starts the FastAPI webhook server. On startup the server:
-  1. Loads sample post data into the registry
-  2. Fires the Rallio engagement simulator (shows the full pipeline)
-  3. Starts APScheduler polling every 5 minutes as a fallback
+Starts the FastAPI webhook server. On startup the server loads sample
+post data into the registry, then waits for events on /webhook/engagement
+and /webhook/slack.
+
+To exercise the full pipeline against the sample posts, run
+`uv run python test_pipeline.py` (in a separate terminal) or POST to
+/webhook/engagement directly.
+
+NOTE: APScheduler polling fallback is a planned feature, not yet wired up —
+the agent currently relies on /webhook/engagement being called.
 """
 import uvicorn
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from server.webhook import app
-from integrations.rallio import RallioClient
-from agent.agent import process_post
 
 
 def main():

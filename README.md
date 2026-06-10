@@ -14,7 +14,7 @@ Rallio post event
 Composite Engagement Score
 (comments 30% · shares 25% · saves 20% · reach velocity 15% · likes 10%)
       ↓
-Negativity Filter (Claude sentiment analysis)
+Negativity Filter (reaction ratio + LLM sentiment analysis)
       ↓
        ├─ AUTONOMOUS → boost fires immediately
        ├─ APPROVAL   → Slack notification → account manager approves
@@ -26,11 +26,11 @@ Meta Ads boost submitted
 ## Features
 
 - **Real-time composite scoring** — weighted engagement score normalized against each location's 90-day baseline
-- **Two-stage negativity filter** — reaction ratio check + Claude-powered comment sentiment analysis
+- **Two-stage negativity filter** — reaction ratio check + LLM-powered comment sentiment analysis
 - **Human-in-the-loop modes** — per-brand configuration: `AUTONOMOUS`, `APPROVAL`, or `NOTIFY_ONLY`
 - **Dynamic lookalike audiences** — built from the post's real organic engagers, not a generic radius
 - **Budget controls** — monthly cap enforced per location, no boost fires if cap is exhausted
-- **Webhook-first, polling fallback** — event-driven when Rallio supports webhooks; APScheduler polling as safety net
+- **Webhook-driven** — `/webhook/engagement` triggers the pipeline per post (polling fallback planned, not yet implemented)
 
 ## Architecture
 
@@ -39,8 +39,8 @@ autoboost-agent/
 ├── agent/
 │   ├── tools/          # LangChain tools: score, filter, notify, boost
 │   ├── engine.py       # Composite score calculation
-│   ├── filter.py       # Negativity filter (Claude)
-│   └── agent.py        # LangChain agent orchestration
+│   ├── filter.py       # Negativity filter (reaction ratio + LLM sentiment)
+│   └── agent.py        # LangGraph ReAct agent orchestration
 ├── integrations/
 │   ├── rallio.py       # Rallio client (mock + real interface)
 │   ├── slack.py        # Slack MCP wrapper
@@ -51,6 +51,9 @@ autoboost-agent/
 │   └── sample_posts.json  # Demo fixtures
 ├── server/
 │   └── webhook.py      # FastAPI webhook server
+├── docs/
+│   ├── architecture.md            # System architecture diagram + tech stack
+│   └── rallio-integration-flow.md # End-to-end decision flow diagram
 └── main.py             # Entry point
 ```
 
@@ -72,20 +75,70 @@ cp .env.example .env
 uv run python main.py
 ```
 
+This starts the FastAPI server on `http://localhost:8000`, loads the sample
+posts/baselines into the in-memory registry, and waits for events on
+`/webhook/engagement` and `/webhook/slack`. See "Testing Locally" below to
+actually fire the pipeline.
+
 ## Testing Locally
 
-The agent ships with a Rallio mock simulator. Run it to fire sample engagement events without needing real Rallio credentials:
+The agent ships with sample post data (`data/sample_posts.json`) covering
+all three boost modes plus edge cases (below threshold, negative sentiment).
+
+**Option A — run the pipeline directly** (no server needed):
 
 ```bash
-python -m integrations.rallio --simulate
+# Single post
+uv run python test_pipeline.py post-viral-001
+
+# Full suite (processes posts sequentially with a short delay between them)
+uv run python test_pipeline.py
 ```
 
-To test with real webhooks locally, use [ngrok](https://ngrok.com):
+> **Note:** the default `gemini-2.5-flash` free tier is limited to ~5
+> requests/minute **and 20 requests/day**, while each post can take 3-4 LLM
+> calls. If you hit a `429 RESOURCE_EXHAUSTED` error, check whether it's the
+> per-minute limit (wait ~1 min and retry) or the per-day limit (wait until
+> the next day, or switch to `LLM_PROVIDER=anthropic` with a paid key). Test
+> one post at a time to conserve quota.
+
+**Option B — via the webhook server.** With `uv run python main.py` running,
+in another terminal:
 
 ```bash
+curl -X POST http://localhost:8000/webhook/engagement \
+  -H "Content-Type: application/json" \
+  -d '{"post_id":"post-viral-001","location_id":"loc-001","brand_id":"demo-brand"}'
+```
+
+### Testing the Slack approval flow
+
+For `APPROVAL`-mode brands (e.g. `demo-brand`), the agent sends a Slack
+message with Approve/Suppress buttons and waits for a response. With the
+server running and a post in-flight, simulate a button click — no public
+endpoint required:
+
+```bash
+curl -X POST http://localhost:8000/webhook/slack \
+  --data-urlencode 'payload={"actions":[{"action_id":"approve_boost","value":"post-viral-001"}]}'
+```
+
+Use `"action_id":"suppress_boost"` to simulate rejecting the boost instead.
+
+### Real Slack button clicks (ngrok)
+
+To have the actual Approve/Suppress buttons in Slack call back to your local
+server, use [ngrok](https://ngrok.com):
+
+```bash
+# One-time setup: sign up at ngrok.com, then add your authtoken
+ngrok config add-authtoken <your-authtoken>
+
 ngrok http 8000
-# Point your webhook URL to the ngrok address
 ```
+
+Then in your Slack app settings (api.slack.com/apps), enable **Interactivity
+& Shortcuts** and set the Request URL to `<ngrok-url>/webhook/slack`.
 
 ## Configuration
 
@@ -104,17 +157,17 @@ Each franchise brand is configured independently in `config/brand_config.py`:
 | Integration | Status | Notes |
 |-------------|--------|-------|
 | Rallio | Mock | Swap `integrations/rallio.py` for real client when webhooks are confirmed |
-| Slack MCP | Real | Requires `SLACK_BOT_TOKEN` |
+| Slack | Real | Requires `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` |
 | Meta Ads MCP | Stub | Meta Ads MCP announced April 2026 — drop-in ready |
-| Claude (Anthropic) | Real | Powers negativity filter sentiment analysis |
+| LLM (negativity filter + agent reasoning) | Real | Gemini 2.5 Flash by default (free tier); set `LLM_PROVIDER=anthropic` for Claude Haiku |
 
 ## Built With
 
-- [LangChain](https://langchain.com) — agent orchestration
-- [Claude (Anthropic)](https://anthropic.com) — sentiment analysis
+- [LangChain](https://langchain.com) + [LangGraph](https://langchain-ai.github.io/langgraph/) — agent orchestration (ReAct agent)
+- [Google Gemini](https://ai.google.dev) / [Claude (Anthropic)](https://anthropic.com) — LLM backbone, switchable via `.env`
 - [FastAPI](https://fastapi.tiangolo.com) — webhook server
-- [APScheduler](https://apscheduler.readthedocs.io) — polling scheduler
 - [Slack SDK](https://slack.dev/python-slack-sdk/) — approval notifications
+- [LangSmith](https://smith.langchain.com) — agent tracing and observability
 - [uv](https://docs.astral.sh/uv/) — package management
 
 ---

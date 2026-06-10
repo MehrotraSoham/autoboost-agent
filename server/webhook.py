@@ -13,22 +13,16 @@ from pydantic import BaseModel
 
 from agent.agent import process_post
 from integrations.slack import resolve_approval
-from integrations.rallio import RallioClient
 from config.registry import load_sample_data, get_post
-from config.models import Post, LocationBaseline
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load sample data so posts are available in the registry on startup
+    # Load sample data so posts are available in the registry on startup.
+    # To run the full pipeline against the sample posts, use
+    # `uv run python test_pipeline.py` (processes posts sequentially —
+    # firing them all at once exceeds Gemini's free-tier rate limit).
     load_sample_data()
-    # NOTE: simulator disabled temporarily — firing all 5 sample posts at once
-    # blows through Gemini's free-tier 5 req/min quota. Trigger posts manually
-    # via /webhook/engagement instead.
-    # client = RallioClient(mock=True)
-    # asyncio.create_task(client.run_simulator(
-    #     handler=lambda event: process_post(event.post_id)
-    # ))
     yield
 
 
