@@ -118,9 +118,14 @@ def _send_real_slack_message(
     budget: float,
     mode: str,
 ) -> None:
+    import ssl
+    import certifi
     from slack_sdk import WebClient
 
-    client = WebClient(token=settings.slack_bot_token)
+    client = WebClient(
+        token=settings.slack_bot_token,
+        ssl=ssl.create_default_context(cafile=certifi.where()),
+    )
     action = "Approval Requested" if mode == "APPROVAL" else "Performance Alert"
 
     blocks = [
