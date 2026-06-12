@@ -26,7 +26,7 @@ if settings.langchain_api_key:
     os.environ.setdefault("LANGCHAIN_API_KEY", settings.langchain_api_key)
 os.environ.setdefault("LANGCHAIN_PROJECT", settings.langchain_project)
 
-SYSTEM_PROMPT = """You are AutoBoost, an AI agent for Ignite Visibility that decides whether \
+SYSTEM_PROMPT = """You are AutoBoost, an AI agent that decides whether \
 to boost franchise social media posts with paid advertising.
 
 When given a post_id and brand_id, follow this exact decision process:

@@ -1,20 +1,20 @@
-# AutoBoost in Rallio — End-to-End Flow
+# AutoBoost in a Social Platform — End-to-End Flow
 
-How AutoBoost would sit inside the Rallio product experience: a post's
+How AutoBoost would sit inside a social media management product: a post's
 engagement is monitored in real time, scored, sentiment-checked, and routed
-to the action appropriate for that brand — with Rallio as both the trigger
-and the place results surface back to.
+to the action appropriate for that brand — with the source platform as both
+the trigger and the place results surface back to.
 
 ```mermaid
 flowchart TD
-    classDef rallio fill:#e8d5ff,stroke:#6a1b9a,color:#1b1b1b;
+    classDef platform fill:#e8d5ff,stroke:#6a1b9a,color:#1b1b1b;
     classDef agent fill:#dbe9ff,stroke:#1c5dbf,color:#1b1b1b;
     classDef human fill:#fff3cd,stroke:#b8860b,color:#1b1b1b;
     classDef terminal fill:#d4f7d4,stroke:#2e7d32,color:#1b1b1b;
     classDef suppress fill:#fde0e0,stroke:#c62828,color:#1b1b1b;
 
-    A["Rallio: post published,<br/>engagement tracked in real time"]:::rallio
-    B{"Engagement spike<br/>detected on a post"}:::rallio
+    A["Source platform: post published,<br/>engagement tracked in real time"]:::platform
+    B{"Engagement spike<br/>detected on a post"}:::platform
     C["AutoBoost: score_post —<br/>composite score vs<br/>90-day location baseline"]:::agent
     D{"Composite score ≥<br/>brand threshold?"}:::agent
     E["No action —<br/>resume monitoring"]:::terminal
@@ -27,8 +27,8 @@ flowchart TD
     L["Slack: Performance alert<br/>(no spend)"]:::human
     M{"AM responds within<br/>approval window?"}:::human
     N["Meta Ads: campaign live,<br/>budget capped per brand"]:::terminal
-    O["Rallio dashboard: boosted-post<br/>badge + campaign link"]:::rallio
-    P["AM can still boost<br/>manually from Rallio"]:::rallio
+    O["Source platform dashboard:<br/>boosted-post badge + campaign link"]:::platform
+    P["AM can still boost<br/>manually from the source platform"]:::platform
 
     A --> B -- "webhook event" --> C
     C --> D
@@ -47,22 +47,22 @@ flowchart TD
     L --> P
 ```
 
-**Legend:** 🟪 Rallio touchpoint (today or proposed) · 🟦 AutoBoost agent step · 🟨 Account Manager / Slack · 🟩 successful outcome · 🟥 suppressed outcome
+**Legend:** 🟪 source platform touchpoint (today or proposed) · 🟦 AutoBoost agent step · 🟨 Account Manager / Slack · 🟩 successful outcome · 🟥 suppressed outcome
 
-## Why this matters for Rallio
+## Why this matters for a source platform
 
 - **Closes the 3–5 day gap** between a post going viral and an ad actually running — AutoBoost reacts within minutes of an engagement spike.
-- **Per-brand control, not all-or-nothing**: a brand can run fully `AUTONOMOUS`, require human `APPROVAL` via Slack, or just get `NOTIFY_ONLY` alerts — Rallio decides the trust level per franchise.
+- **Per-brand control, not all-or-nothing**: a brand can run fully `AUTONOMOUS`, require human `APPROVAL` via Slack, or just get `NOTIFY_ONLY` alerts — the platform decides the trust level per franchise.
 - **Built-in guardrails**: nothing spends money until it passes both an engagement threshold *and* a negativity filter, and every brand has a hard monthly budget cap.
-- **Rallio stays the system of record**: the proposed loop-back (🟪 boxes) shows boosted posts and campaign links surfaced directly in the Rallio dashboard, and account managers retain the ability to boost manually at any time.
+- **The source platform stays the system of record**: the proposed loop-back (🟪 boxes) shows boosted posts and campaign links surfaced directly in the platform dashboard, and account managers retain the ability to boost manually at any time.
 
 ## Today vs. proposed
 
 | Step | Status |
 |---|---|
-| Engagement webhook trigger | Mocked (`integrations/rallio.py`) — ready for real Rallio webhook |
+| Engagement webhook trigger | Mocked (`integrations/social_platform.py`) — ready for a real platform webhook |
 | Scoring, negativity filter, mode routing | **Working today**, demoed live |
 | Slack notification (`NOTIFY_ONLY`) | **Working today** with real Slack workspace |
 | Slack approval (`APPROVAL`) | Working today via simulated webhook callback; needs public endpoint (e.g. ngrok) for live Slack button clicks |
 | Meta Ads boost submission | Stubbed with realistic mock IDs — ready for Meta Ads MCP |
-| Rallio dashboard loop-back | Proposed — not yet built |
+| Source platform dashboard loop-back | Proposed — not yet built |

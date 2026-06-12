@@ -1,9 +1,10 @@
 """
-Rallio integration — mock client and engagement event simulator.
+Source platform integration — mock client and engagement event simulator.
 
-In production: replace RallioClient.fetch_active_posts() with real API calls
-to the Rallio REST API. The event format (EngagementEvent) stays the same,
-so the rest of the pipeline needs no changes.
+In production: replace SocialPlatformClient.fetch_active_posts() with real
+API calls to the source platform's REST API. The event format
+(EngagementEvent) stays the same, so the rest of the pipeline needs no
+changes.
 """
 import asyncio
 import json
@@ -27,10 +28,10 @@ class EngagementEvent:
 EventHandler = Callable[[EngagementEvent], Awaitable[None]]
 
 
-class RallioClient:
+class SocialPlatformClient:
     """
-    Mock Rallio client. Exposes the same interface a real client would,
-    so swapping in the real Rallio API is a one-file change.
+    Mock source platform client. Exposes the same interface a real client
+    would, so swapping in the real platform API is a one-file change.
     """
 
     def __init__(self, mock: bool = True):
@@ -63,7 +64,7 @@ class RallioClient:
             brand_id=post.brand_id,
         )
         print(
-            f"[Rallio mock] Engagement spike fired → post_id={post_id} "
+            f"[Source platform mock] Engagement spike fired → post_id={post_id} "
             f"brand_id={post.brand_id}"
         )
         await handler(event)
@@ -71,13 +72,13 @@ class RallioClient:
     async def run_simulator(self, handler: EventHandler) -> None:
         """
         Fire all sample posts as engagement events with a short stagger.
-        Simulates a real-time stream of Rallio webhook events.
+        Simulates a real-time stream of source platform webhook events.
         """
-        print("[Rallio mock] Starting engagement simulator...")
+        print("[Source platform mock] Starting engagement simulator...")
         post_ids = list(_posts.keys())
         tasks = [
             self.simulate_engagement_spike(pid, handler, delay_secs=i * 1.5)
             for i, pid in enumerate(post_ids)
         ]
         await asyncio.gather(*tasks)
-        print("[Rallio mock] Simulator complete.")
+        print("[Source platform mock] Simulator complete.")

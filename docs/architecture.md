@@ -10,7 +10,7 @@ flowchart LR
     classDef external fill:#e3e3e3,stroke:#666666,color:#1b1b1b;
     classDef core fill:#dbe9ff,stroke:#1c5dbf,color:#1b1b1b;
 
-    Rallio["Rallio Platform<br/>post + engagement data"]:::external
+    SourcePlatform["Source Platform<br/>post + engagement data"]:::external
 
     subgraph Entry["FastAPI + Uvicorn"]
         WebhookEP["/webhook/engagement<br/>/webhook/slack"]:::core
@@ -38,8 +38,8 @@ flowchart LR
     MetaAds["Meta Ads<br/>Campaign Manager"]:::stub
     LangSmithSvc["LangSmith<br/>tracing & observability"]:::live
 
-    Rallio -- "engagement webhook" --> WebhookEP
-    Sched -. "fallback poll" .-> Rallio
+    SourcePlatform -- "engagement webhook" --> WebhookEP
+    Sched -. "fallback poll" .-> SourcePlatform
     WebhookEP --> AgentCore
     AgentCore -- "tool calls" --> ToolLayer
     T1 --> DataReg
@@ -66,7 +66,7 @@ flowchart LR
 | Observability | LangSmith (per-run traces of every LLM call & tool call) | Live |
 | Notifications & approvals | Slack SDK (real bot token + channel) | Live |
 | Ad platform | Meta Ads | Stubbed — mock campaign IDs, drop-in ready for Meta Ads MCP |
-| Source platform | Rallio | Mocked client + sample data — drop-in ready for Rallio webhooks/API |
+| Source platform | Generic social platform | Mocked client + sample data — drop-in ready for real webhooks/API |
 | Package management | uv | Live |
 
 ## Agent & tools

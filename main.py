@@ -20,7 +20,6 @@ from server.webhook import app
 def main():
     print("=" * 60)
     print("  AutoBoost Agent")
-    print("  Ignite Visibility × Rallio")
     print("  http://localhost:8000")
     print("=" * 60)
     uvicorn.run(app, host="0.0.0.0", port=8000)

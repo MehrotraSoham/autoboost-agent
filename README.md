@@ -9,7 +9,7 @@ Franchise locations post content daily, but no system watches for breakout posts
 ## How It Works
 
 ```
-Rallio post event
+Source platform post event
       ↓
 Composite Engagement Score
 (comments 30% · shares 25% · saves 20% · reach velocity 15% · likes 10%)
@@ -42,7 +42,7 @@ autoboost-agent/
 │   ├── filter.py       # Negativity filter (reaction ratio + LLM sentiment)
 │   └── agent.py        # LangGraph ReAct agent orchestration
 ├── integrations/
-│   ├── rallio.py       # Rallio client (mock + real interface)
+│   ├── social_platform.py  # Source platform client (mock + real interface)
 │   ├── slack.py        # Slack MCP wrapper
 │   └── meta.py         # Meta Ads stub (swap for Meta Ads MCP)
 ├── config/
@@ -52,8 +52,8 @@ autoboost-agent/
 ├── server/
 │   └── webhook.py      # FastAPI webhook server
 ├── docs/
-│   ├── architecture.md            # System architecture diagram + tech stack
-│   └── rallio-integration-flow.md # End-to-end decision flow diagram
+│   ├── architecture.md       # System architecture diagram + tech stack
+│   └── integration-flow.md   # End-to-end decision flow diagram
 └── main.py             # Entry point
 ```
 
@@ -156,7 +156,7 @@ Each franchise brand is configured independently in `config/brand_config.py`:
 
 | Integration | Status | Notes |
 |-------------|--------|-------|
-| Rallio | Mock | Swap `integrations/rallio.py` for real client when webhooks are confirmed |
+| Source platform | Mock | Swap `integrations/social_platform.py` for real client when webhooks are confirmed |
 | Slack | Real | Requires `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` |
 | Meta Ads MCP | Stub | Meta Ads MCP announced April 2026 — drop-in ready |
 | LLM (negativity filter + agent reasoning) | Real | Gemini 2.5 Flash by default (free tier); set `LLM_PROVIDER=anthropic` for Claude Haiku |
@@ -172,4 +172,4 @@ Each franchise brand is configured independently in `config/brand_config.py`:
 
 ---
 
-Built by [Soham Mehrotra](https://github.com/MehrotraSoham) · Ignite Visibility × Rallio
+Built by [Soham Mehrotra](https://github.com/MehrotraSoham)

@@ -2,7 +2,7 @@
 FastAPI webhook server.
 
 Two endpoints:
-  POST /webhook/engagement  — receives Rallio engagement events (real or mock)
+  POST /webhook/engagement  — receives source platform engagement events (real or mock)
   POST /webhook/slack       — receives Slack interactive component callbacks (Approve/Suppress)
 """
 import asyncio
@@ -38,9 +38,9 @@ class EngagementPayload(BaseModel):
 @app.post("/webhook/engagement")
 async def handle_engagement_event(payload: EngagementPayload):
     """
-    Called by Rallio when a post's engagement changes.
+    Called by the source platform when a post's engagement changes.
     Kicks off the AutoBoost pipeline asynchronously so the webhook
-    returns immediately (Rallio expects a fast 200 response).
+    returns immediately (the source platform expects a fast 200 response).
     """
     try:
         get_post(payload.post_id)
@@ -48,7 +48,7 @@ async def handle_engagement_event(payload: EngagementPayload):
         raise HTTPException(
             status_code=404,
             detail=f"Post '{payload.post_id}' not in registry. "
-                   "Load it first via the Rallio client or sample data.",
+                   "Load it first via the source platform client or sample data.",
         )
 
     asyncio.create_task(process_post(payload.post_id))
